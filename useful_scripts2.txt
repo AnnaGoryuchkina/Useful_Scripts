@@ -1,0 +1,44 @@
+﻿//скрипт находит номера инцидентов, у которых нет владельца на шаге Обработка инцидента
+
+SELECT table1.NAME
+  FROM (SELECT ID,
+               NAME
+      FROM RT_PROCINST rp
+      WHERE NAME LIKE ('%66-%')
+        AND DROPPED = 0
+        AND rp.RT_PROCDESC = '665788') table1
+    INNER JOIN (SELECT rs.RT_PROCINST
+        FROM RT_SUBINST rs
+        WHERE rs.RT_SUBDESC = '666076'
+          AND rs.UM_USER_EDITOR IS NULL
+          AND DROPPED = 0) table2
+      ON table2.RT_PROCINST = table1.ID;
+	  
+	  
+
+//скрипт полного списка пользователей с ролями и почтамтами
+
+SELECT table3.postamt_index, table3.postamt_name, table3.name, table3.login, TABLE4.role 
+FROM (SELECT table1.postamt_index, table1.postamt_name, table2.user_id, table2.name, table2.login 
+FROM (SELECT POSTAMT_INDEx, POSTAMT_NAME FROM RUSPOST_OFFICE_CARD) table1
+INNER JOIN (SELECT  DISTINCT UM_USER.ID AS user_id,
+  UM_USER.LOGINNAME AS login,
+  UM_USER.name AS name,
+                       UM_GROUP.name AS postamt,
+                       UM_USER.id AS id                    
+        FROM UM_USER,
+             UM_GROUP,
+             UM_GROUP_UM_USER
+        WHERE UM_GROUP_UM_USER.UM_USER = UM_USER.id
+          AND UM_GROUP_UM_USER.UM_GROUP = UM_GROUP.id
+      AND UM_USER.DROPPED = 0) table2 on table2.postamt LIKE(CONCAT('%',table1.postamt_index))) table3 
+INNER JOIN (SELECT um.NAME AS name,
+       ug.NAME AS role, ug.ID AS role_id
+  FROM UM_USER um,
+       UM_GROUP ug,
+       UM_GROUP_UM_USER uguu
+  WHERE ug.ID = uguu.UM_GROUP
+    AND um.ID = uguu.UM_USER
+    AND um.DROPPED = 0 
+    AND ug.NAME LIKE ('%RUSPOST-%')
+    AND ug.DROPPED = 0) table4 ON  table4.NAME = TABLE3.name;
